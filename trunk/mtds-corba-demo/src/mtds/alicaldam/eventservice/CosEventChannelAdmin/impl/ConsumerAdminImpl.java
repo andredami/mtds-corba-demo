@@ -10,6 +10,10 @@ public class ConsumerAdminImpl extends ConsumerAdminPOA {
 		// TODO Auto-generated constructor stub
 	}
 
+	public ConsumerAdminImpl(EventChannelImpl eventChannelImpl) {
+		// TODO Auto-generated constructor stub
+	}
+
 	@Override
 	public ProxyPushSupplier obtain_push_supplier() {
 		// TODO Auto-generated method stub
