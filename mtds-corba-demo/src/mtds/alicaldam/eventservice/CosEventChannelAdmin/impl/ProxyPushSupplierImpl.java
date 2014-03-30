@@ -1,27 +1,78 @@
 package mtds.alicaldam.eventservice.CosEventChannelAdmin.impl;
 
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
+
+import org.omg.CORBA.Any;
+
 import mtds.alicaldam.eventservice.CosEventChannelAdmin.AlreadyConnected;
 import mtds.alicaldam.eventservice.CosEventChannelAdmin.ProxyPushSupplierPOA;
 import mtds.alicaldam.eventservice.CosEventChannelAdmin.TypeError;
+import mtds.alicaldam.eventservice.CosEventComm.Disconnected;
 import mtds.alicaldam.eventservice.CosEventComm.PushConsumer;
 
 public class ProxyPushSupplierImpl extends ProxyPushSupplierPOA {
+	private boolean connected = false;
+	private EventChannelImpl eventChannel;
+	private PushConsumer push_consumer;
+	private LinkedBlockingQueue<Any> queue = new LinkedBlockingQueue<Any>();
+	private Thread pusherThread;
+	private Runnable pusherRunnable= new Runnable() {
+		
+		@Override
+		public void run() {
+			while(connected){
+				Any data;
+				try {
+					data = queue.poll(1, TimeUnit.SECONDS);
+					push_consumer.push(data);
+				} catch (InterruptedException  e) {
+				
+				} catch (Disconnected e) {
+					disconnect_push_supplier();
+				}
+			}
+			
+		}
+	};
 
-	public ProxyPushSupplierImpl() {
-		// TODO Auto-generated constructor stub
+	public ProxyPushSupplierImpl(EventChannelImpl eventChannel) {
+		this.eventChannel = eventChannel;
 	}
 
 	@Override
 	public void connect_push_consumer(PushConsumer push_consumer)
 			throws AlreadyConnected, TypeError {
-		// TODO Auto-generated method stub
-
+		if (push_consumer != null) {
+			throw new AlreadyConnected();
+		}
+		connected=true;
+		this.push_consumer = push_consumer;
+		eventChannel.add(this);
+		pusherThread=new Thread(pusherRunnable);
+		pusherThread.start();
+		
 	}
 
 	@Override
 	public void disconnect_push_supplier() {
-		// TODO Auto-generated method stub
+		if (!connected) {
+			return;
+		}
+		connected=false;
+		eventChannel.remove(this);
+		if (push_consumer!=null){
+			push_consumer.disconnect_push_consumer();
+			push_consumer=null;
+		}
+		pusherThread.interrupt();
+	}
 
+	public void put(Any data) {
+		if (!connected){
+			return;
+		}
+		queue.add(data);
 	}
 
 }
