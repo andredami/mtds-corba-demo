@@ -26,11 +26,14 @@ public class ProxyPullSupplierImpl extends ProxyPullSupplierPOA {
 	public void connect_pull_consumer(PullConsumer pull_consumer)
 			throws AlreadyConnected {
 		disconnected = false;
-		if (pull_consumer != null) {
+		if (consumer != null) {
+			throw new AlreadyConnected("a consumer is already connected to this supplier");
+		}
+		if(pull_consumer!=null){
 			this.consumer = pull_consumer;
 			eventChannel.add(this);
 		} else {
-			throw new BAD_PARAM();
+			throw new BAD_PARAM("arg: pull_cosumer is null");
 		}
 	}
 

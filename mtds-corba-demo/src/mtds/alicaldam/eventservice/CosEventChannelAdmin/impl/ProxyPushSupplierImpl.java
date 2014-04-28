@@ -4,6 +4,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import org.omg.CORBA.Any;
+import org.omg.CORBA.BAD_PARAM;
 
 import mtds.alicaldam.eventservice.CosEventChannelAdmin.AlreadyConnected;
 import mtds.alicaldam.eventservice.CosEventChannelAdmin.ProxyPushSupplierPOA;
@@ -25,11 +26,15 @@ public class ProxyPushSupplierImpl extends ProxyPushSupplierPOA {
 				Any data;
 				try {
 					data = queue.poll(1, TimeUnit.SECONDS);
-					push_consumer.push(data);
+					if(data!=null){
+						System.out.println("A proxy push supplier: sending data!");
+						push_consumer.push(data);
+					}
 				} catch (InterruptedException  e) {
 				
 				} catch (Disconnected e) {
-					disconnect_push_supplier();
+					connected=false;
+					push_consumer=null;
 				}
 			}
 			
@@ -43,15 +48,19 @@ public class ProxyPushSupplierImpl extends ProxyPushSupplierPOA {
 	@Override
 	public void connect_push_consumer(PushConsumer push_consumer)
 			throws AlreadyConnected, TypeError {
-		if (push_consumer != null) {
+		
+		if (this.push_consumer != null) {
 			throw new AlreadyConnected();
 		}
-		connected=true;
-		this.push_consumer = push_consumer;
-		eventChannel.add(this);
-		pusherThread=new Thread(pusherRunnable);
-		pusherThread.start();
 		
+		if(push_consumer!=null){
+			connected=true;
+			this.push_consumer = push_consumer;
+			pusherThread=new Thread(pusherRunnable);
+			pusherThread.start();
+		}else{
+			throw new BAD_PARAM("arg push_consumer is null");
+		}
 	}
 
 	@Override
@@ -72,6 +81,7 @@ public class ProxyPushSupplierImpl extends ProxyPushSupplierPOA {
 		if (!connected){
 			return;
 		}
+		System.out.println("A proxy push supplier: new data in the queue!");
 		queue.add(data);
 	}
 
