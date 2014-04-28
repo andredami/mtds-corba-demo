@@ -1,0 +1,6 @@
+module Data{
+    struct Event{
+        long number;
+        string description;
+    };
+};

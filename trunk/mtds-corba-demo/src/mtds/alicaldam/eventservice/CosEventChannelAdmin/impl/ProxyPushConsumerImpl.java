@@ -10,7 +10,7 @@ import mtds.alicaldam.eventservice.CosEventComm.PushSupplier;
 public class ProxyPushConsumerImpl extends ProxyPushConsumerPOA {
 	private boolean connected=false;
 	EventChannelImpl eventChannel;
-	PushSupplier push_supplier;
+	PushSupplier supplier;
 	public ProxyPushConsumerImpl(EventChannelImpl eventChannel) {
 		this.eventChannel=eventChannel;
 	}
@@ -18,15 +18,16 @@ public class ProxyPushConsumerImpl extends ProxyPushConsumerPOA {
 	@Override
 	public void connect_push_supplier(PushSupplier push_supplier)
 			throws AlreadyConnected {
-		if (push_supplier!=null){
+		if (this.supplier!=null){
 			throw new AlreadyConnected();
 		}
-		this.push_supplier=push_supplier;
+		this.supplier=push_supplier;
 		connected=true;
 	}
 
 	@Override
 	public void push(Any data) throws Disconnected {
+		System.out.println("a proxy push consumer: data received!");
 		if (!connected){
 			throw new Disconnected();
 		}
@@ -49,9 +50,9 @@ public class ProxyPushConsumerImpl extends ProxyPushConsumerPOA {
 			eventChannel=null;
 		}
 	
-		if (push_supplier!=null){
-			push_supplier.disconnect_push_supplier();
-			push_supplier=null;
+		if (supplier!=null){
+			supplier.disconnect_push_supplier();
+			supplier=null;
 		}
 		
 	}
