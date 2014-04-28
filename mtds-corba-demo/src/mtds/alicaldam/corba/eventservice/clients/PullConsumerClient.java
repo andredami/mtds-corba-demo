@@ -5,8 +5,8 @@ import java.util.Scanner;
 import mtds.alicaldam.eventservice.CosEventChannelAdmin.ConsumerAdmin;
 import mtds.alicaldam.eventservice.CosEventChannelAdmin.EventChannel;
 import mtds.alicaldam.eventservice.CosEventChannelAdmin.EventChannelHelper;
-import mtds.alicaldam.eventservice.CosEventChannelAdmin.ProxyPushSupplier;
-import mtds.alicaldam.eventservice.CosEventComm.impl.PushConsumerImpl;
+import mtds.alicaldam.eventservice.CosEventChannelAdmin.ProxyPullSupplier;
+import mtds.alicaldam.eventservice.CosEventComm.impl.PullConsumerImpl;
 
 import org.omg.CORBA.Any;
 import org.omg.CORBA.ORB;
@@ -16,7 +16,7 @@ import org.omg.PortableServer.POAHelper;
 import Data.Event;
 import Data.EventHelper;
 
-public class PushConsumerClient {
+public class PullConsumerClient {
 	public static final String ADDRESS = "localhost";
 
 	public static void main(String args[]){
@@ -25,11 +25,11 @@ public class PushConsumerClient {
 
 			ORB orb = ORB.init(args,null);
 
-			//create the remote push consumer
-			final PushConsumerImpl push_consumer_impl=new PushConsumerImpl();
+			//create the remote pull consumer
+			final PullConsumerImpl pull_consumer_impl=new PullConsumerImpl();
 			POA rootpoa = POAHelper.narrow(orb.resolve_initial_references("RootPOA"));
 			rootpoa.the_POAManager().activate();
-			org.omg.CORBA.Object ref = rootpoa.servant_to_reference(push_consumer_impl);
+			org.omg.CORBA.Object ref = rootpoa.servant_to_reference(pull_consumer_impl);
 
 			//take a ref to the event channel
 			org.omg.CORBA.Object sRef = orb.string_to_object("corbaname::"+ADDRESS+"::1050#DemoChannel");
@@ -37,9 +37,9 @@ public class PushConsumerClient {
 						
 			//connect consumer and supplier
 			ConsumerAdmin consumerAdmin=event_channel.for_consumers();
-			ProxyPushSupplier proxy_push_supplier=consumerAdmin.obtain_push_supplier();
-			push_consumer_impl.setPushSupplier(proxy_push_supplier);
-			proxy_push_supplier.connect_push_consumer(push_consumer_impl._this());
+			ProxyPullSupplier proxy_pull_supplier=consumerAdmin.obtain_pull_supplier();
+			pull_consumer_impl.setPullSupplier(proxy_pull_supplier);
+			proxy_pull_supplier.connect_pull_consumer(pull_consumer_impl._this());
 			
 			//TODO: receive and print data 
 			Runnable r=new Runnable(){
@@ -47,7 +47,7 @@ public class PushConsumerClient {
 					
 					try{
 					while(true){
-						Event data=readDataFromSupplier(push_consumer_impl);
+						Event data=readDataFromSupplier(pull_consumer_impl);
 					}
 					}catch(Exception e){
 						e.printStackTrace();
@@ -62,7 +62,7 @@ public class PushConsumerClient {
 			while(!scanner.nextLine().equalsIgnoreCase("q")){
 			}
 			System.out.println("Disconnecting supplier...");
-			push_consumer_impl.disconnect_push_consumer();
+			pull_consumer_impl.disconnect_pull_consumer();
 			scanner.close();
 			System.out.println("EXIT OK");	
 			
@@ -71,7 +71,7 @@ public class PushConsumerClient {
 		}
 	}
 
-	private static Event readDataFromSupplier(final PushConsumerImpl push_consumer_impl)
+	private static Event readDataFromSupplier(final PullConsumerImpl push_consumer_impl)
 			throws InterruptedException {
 		System.out.println("Waiting for new data...");
 		Any data = push_consumer_impl.read();
