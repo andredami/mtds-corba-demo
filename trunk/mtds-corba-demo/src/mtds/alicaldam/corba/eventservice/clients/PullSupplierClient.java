@@ -4,10 +4,9 @@ import java.util.Scanner;
 
 import mtds.alicaldam.eventservice.CosEventChannelAdmin.EventChannel;
 import mtds.alicaldam.eventservice.CosEventChannelAdmin.EventChannelHelper;
-import mtds.alicaldam.eventservice.CosEventChannelAdmin.ProxyPushConsumer;
+import mtds.alicaldam.eventservice.CosEventChannelAdmin.ProxyPullConsumer;
 import mtds.alicaldam.eventservice.CosEventChannelAdmin.SupplierAdmin;
-import mtds.alicaldam.eventservice.CosEventComm.impl.PushSupplierImpl;
-
+import mtds.alicaldam.eventservice.CosEventComm.impl.PullSupplierImpl;
 import org.omg.CORBA.Any;
 import org.omg.CORBA.ORB;
 import org.omg.PortableServer.POA;
@@ -16,7 +15,8 @@ import org.omg.PortableServer.POAHelper;
 import Data.Event;
 import Data.EventHelper;
 
-public class PushSupplierClient {
+public class PullSupplierClient {
+
 	public static final String ADDRESS="localhost";
 	public static void main(String args[]){
 		
@@ -25,10 +25,10 @@ public class PushSupplierClient {
 			ORB orb = ORB.init(args,null);
 
 			//create the remote push supplier
-			PushSupplierImpl push_supplier_impl=new PushSupplierImpl();
+			PullSupplierImpl pull_supplier_impl=new PullSupplierImpl();
 			POA rootpoa = POAHelper.narrow(orb.resolve_initial_references("RootPOA"));
 			rootpoa.the_POAManager().activate();
-			org.omg.CORBA.Object ref = rootpoa.servant_to_reference(push_supplier_impl);
+			org.omg.CORBA.Object ref = rootpoa.servant_to_reference(pull_supplier_impl);
 
 			//take a ref to the event channel
 			org.omg.CORBA.Object sRef = orb.string_to_object("corbaname::"+ADDRESS+"::1050#DemoChannel");
@@ -36,9 +36,9 @@ public class PushSupplierClient {
 						
 			//connect consumer and supplier
 			SupplierAdmin supplierAdmin=event_channel.for_suppliers();
-			ProxyPushConsumer proxy_push_consumer=supplierAdmin.obtain_push_consumer();
-			push_supplier_impl.setPushConsumer(proxy_push_consumer);
-			proxy_push_consumer.connect_push_supplier(push_supplier_impl._this());
+			ProxyPullConsumer proxy_pull_consumer=supplierAdmin.obtain_pull_consumer();
+			pull_supplier_impl.setPullConsumer(proxy_pull_consumer);
+			proxy_pull_consumer.connect_pull_supplier(pull_supplier_impl._this());
 			
 			//TODO: receive and print data 
 			Scanner scanner= new Scanner(System.in);
@@ -47,7 +47,7 @@ public class PushSupplierClient {
 				System.out.println("sending the message...");
 				Any data= orb.create_any();
 				EventHelper.insert(data, new Event(0,dataString));
-				push_supplier_impl.send(data);
+				pull_supplier_impl.send(data);
 				System.out.println("message sent!");
 				dataString=scanner.nextLine();
 			}
@@ -57,5 +57,4 @@ public class PushSupplierClient {
 			e.printStackTrace();
 		}
 	}
-
 }

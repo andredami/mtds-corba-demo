@@ -69,6 +69,7 @@ public class ProxyPullSupplierImpl extends ProxyPullSupplierPOA {
 				has_event.value = true;
 			} else {
 				has_event.value = false;
+				elem=_orb().create_any();
 			}
 		}
 		return elem;
