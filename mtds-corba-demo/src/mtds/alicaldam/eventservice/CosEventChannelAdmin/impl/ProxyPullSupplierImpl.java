@@ -13,7 +13,7 @@ import mtds.alicaldam.eventservice.CosEventComm.PullConsumer;
 
 public class ProxyPullSupplierImpl extends ProxyPullSupplierPOA {
 
-	private boolean disconnected = true;
+	private boolean connected = false;
 	private PullConsumer consumer = null;
 	private LinkedList<Any> queue = new LinkedList<>();
 	private EventChannelImpl eventChannel;
@@ -25,21 +25,21 @@ public class ProxyPullSupplierImpl extends ProxyPullSupplierPOA {
 	@Override
 	public void connect_pull_consumer(PullConsumer pull_consumer)
 			throws AlreadyConnected {
-		disconnected = false;
-		if (consumer != null) {
-			throw new AlreadyConnected("a consumer is already connected to this supplier");
+		synchronized (this) {
+			if (connected) {
+				throw new AlreadyConnected();
+			} else {
+				eventChannel.add(this);
+				this.consumer = pull_consumer;
+				connected = true;
+			}
 		}
-		if(pull_consumer!=null){
-			this.consumer = pull_consumer;
-			eventChannel.add(this);
-		} else {
-			throw new BAD_PARAM("arg: pull_cosumer is null");
-		}
+
 	}
 
 	@Override
 	public Any pull() throws Disconnected {
-		if (disconnected) {
+		if (!connected) {
 			throw new Disconnected();
 		}
 		Any elem;
@@ -59,7 +59,7 @@ public class ProxyPullSupplierImpl extends ProxyPullSupplierPOA {
 
 	@Override
 	public Any try_pull(BooleanHolder has_event) throws Disconnected {
-		if (disconnected) {
+		if (!connected) {
 			throw new Disconnected();
 		}
 		Any elem = null;
@@ -77,15 +77,15 @@ public class ProxyPullSupplierImpl extends ProxyPullSupplierPOA {
 
 	@Override
 	public void disconnect_pull_supplier() {
-		if (!disconnected) {
-			disconnected = true;
+		if (connected) {
+			connected = false;
 			consumer.disconnect_pull_consumer();
 			consumer = null;
 		}
 	}
 
 	public void put(Any a) {
-		if (disconnected){return;}
+		if (!connected){return;}
 		synchronized (queue) {
 			queue.addLast(a);
 		}
