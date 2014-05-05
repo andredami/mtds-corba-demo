@@ -51,6 +51,7 @@ public class PullSupplierClient {
 				System.out.println("message sent!");
 				dataString=scanner.nextLine();
 			}
+			proxy_pull_consumer.disconnect_pull_consumer();
 			scanner.close();
 			
 		}catch (Exception e) {

@@ -48,8 +48,9 @@ public class ProxyPullConsumerImpl extends ProxyPullConsumerPOA {
 				while (connected) {
 					PullSupplier stmp = null;
 					synchronized (this) {
-						if (connected)
+						if (connected){
 							stmp = supplier;
+						}
 					}
 
 					if (stmp != null) {
@@ -62,7 +63,7 @@ public class ProxyPullConsumerImpl extends ProxyPullConsumerPOA {
 						}
 					}
 				}
-			} catch (Disconnected |RuntimeException| InterruptedException e) {
+			} catch (Disconnected | RuntimeException | InterruptedException e) {
 
 			}
 		}

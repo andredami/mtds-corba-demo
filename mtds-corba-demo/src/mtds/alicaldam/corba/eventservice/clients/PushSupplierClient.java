@@ -51,6 +51,7 @@ public class PushSupplierClient {
 				System.out.println("message sent!");
 				dataString=scanner.nextLine();
 			}
+			proxy_push_consumer.disconnect_push_consumer();
 			scanner.close();
 			
 		}catch (Exception e) {
