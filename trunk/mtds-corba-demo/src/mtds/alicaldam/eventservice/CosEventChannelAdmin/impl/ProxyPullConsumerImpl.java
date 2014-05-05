@@ -2,6 +2,7 @@ package mtds.alicaldam.eventservice.CosEventChannelAdmin.impl;
 
 import org.omg.CORBA.Any;
 import org.omg.CORBA.BooleanHolder;
+import org.omg.CORBA.COMM_FAILURE;
 
 import mtds.alicaldam.eventservice.CosEventChannelAdmin.AlreadyConnected;
 import mtds.alicaldam.eventservice.CosEventChannelAdmin.ProxyPullConsumerPOA;
@@ -61,7 +62,7 @@ public class ProxyPullConsumerImpl extends ProxyPullConsumerPOA {
 						}
 					}
 				}
-			} catch (Disconnected | InterruptedException e) {
+			} catch (Disconnected |RuntimeException| InterruptedException e) {
 
 			}
 		}
