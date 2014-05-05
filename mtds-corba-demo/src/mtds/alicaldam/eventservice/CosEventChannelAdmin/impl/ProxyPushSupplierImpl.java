@@ -55,6 +55,7 @@ public class ProxyPushSupplierImpl extends ProxyPushSupplierPOA {
 		
 		if(push_consumer!=null){
 			connected=true;
+			eventChannel.add(this);
 			this.push_consumer = push_consumer;
 			pusherThread=new Thread(pusherRunnable);
 			pusherThread.start();

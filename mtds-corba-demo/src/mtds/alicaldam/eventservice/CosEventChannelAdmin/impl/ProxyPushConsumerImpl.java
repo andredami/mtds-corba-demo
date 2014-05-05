@@ -22,12 +22,10 @@ public class ProxyPushConsumerImpl extends ProxyPushConsumerPOA {
 			throws AlreadyConnected {
 		synchronized (this) {
 			if (!connected) {
-				if (eventChannel != null) {
-					this.supplier = push_supplier;
-					connected = true;
-				}else{
-					throw new OBJECT_NOT_EXIST();
-				}
+				eventChannel.add(this);
+				this.supplier = push_supplier;
+				connected = true;
+
 			} else {
 				throw new AlreadyConnected();
 			}
@@ -58,13 +56,9 @@ public class ProxyPushConsumerImpl extends ProxyPushConsumerPOA {
 		PushSupplier sTmp = null;
 
 		synchronized (this) {
-			connected = false;
-			if (eventChannel != null) {
+			if(connected){
+				connected = false;
 				eventChannel.remove(this);// TODO think about moving it in tmp
-											// like supplier
-				eventChannel = null;
-			}
-			if (supplier != null) {
 				sTmp = supplier;
 				supplier = null;
 			}
