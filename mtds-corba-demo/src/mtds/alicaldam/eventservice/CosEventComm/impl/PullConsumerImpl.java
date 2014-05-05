@@ -19,18 +19,26 @@ public class PullConsumerImpl extends PullConsumerPOA {
 
 		@Override
 		public void run() {
-			BooleanHolder has_event = new BooleanHolder(false);
-			while (!connected) {
-				try {
-					Any event = supplier.try_pull(has_event);
-					if (has_event.value == true) {
-						queue.add(event);
-					} else {
-						Thread.sleep(POLLING_INTERVAL_MILLIS);
+			try {
+				while (connected) {
+					PullSupplier stmp = null;
+					synchronized (this) {
+						if (connected)
+							stmp = supplier;
 					}
-				} catch (Disconnected | InterruptedException e) {
-					disconnect_pull_consumer();
+
+					if (stmp != null) {
+						BooleanHolder has_event = new BooleanHolder(false);
+						Any event = stmp.try_pull(has_event);
+						if (has_event.value == true) {
+							queue.add(event);
+						} else {
+							Thread.sleep(POLLING_INTERVAL_MILLIS);
+						}
+					}
 				}
+			} catch (Disconnected | InterruptedException e) {
+				disconnect_pull_consumer();
 			}
 		}
 	};
@@ -41,15 +49,22 @@ public class PullConsumerImpl extends PullConsumerPOA {
 
 	@Override
 	public void disconnect_pull_consumer() {
-		if (!connected) {
-			return;
+		PullSupplier sTmp = null;
+
+		synchronized (this) {
+			if (connected) {
+				connected = false;
+				sTmp = supplier;
+				supplier = null;
+				t.interrupt();
+			}else{
+				return;
+			}
 		}
-		connected = false;
-		if (supplier != null) {
-			supplier.disconnect_pull_supplier();
-			supplier = null;
-			t.interrupt();
+		if (sTmp != null) {
+			sTmp.disconnect_pull_supplier();
 		}
+
 	}
 
 	public void setPullSupplier(PullSupplier supplier) {
