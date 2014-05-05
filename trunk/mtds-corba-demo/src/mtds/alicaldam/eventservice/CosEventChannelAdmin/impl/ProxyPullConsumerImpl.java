@@ -25,9 +25,9 @@ public class ProxyPullConsumerImpl extends ProxyPullConsumerPOA {
 		if(supplier!=null){
 			throw new AlreadyConnected();
 		}
+		eventChannel.add(this);
 		supplier=pull_supplier;
 		disconnected=false;
-		eventChannel.add(this);
 		t=new Thread(pullThread);
 		t.start();
 		

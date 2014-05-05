@@ -29,7 +29,6 @@ public class SupplierAdminImpl extends SupplierAdminPOA {
 	public ProxyPushConsumer obtain_push_consumer() {
 		ProxyPushConsumerImpl proxy_push_consumer = new ProxyPushConsumerImpl(
 				eventChannel);
-		eventChannel.add(proxy_push_consumer);
 		org.omg.CORBA.Object refProxyPushConsumer=null;
 		try {
 			refProxyPushConsumer = _poa()
@@ -44,7 +43,6 @@ public class SupplierAdminImpl extends SupplierAdminPOA {
 	public ProxyPullConsumer obtain_pull_consumer() {
 		ProxyPullConsumerImpl proxy_pull_consumer = new ProxyPullConsumerImpl(
 				eventChannel);
-		eventChannel.add(proxy_pull_consumer);
 		org.omg.CORBA.Object refProxyPullConsumer=null;
 		try {
 			refProxyPullConsumer = _poa()
