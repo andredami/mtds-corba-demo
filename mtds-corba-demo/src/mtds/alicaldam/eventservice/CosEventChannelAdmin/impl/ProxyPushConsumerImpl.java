@@ -52,7 +52,6 @@ public class ProxyPushConsumerImpl extends ProxyPushConsumerPOA {
 
 	@Override
 	public void disconnect_push_consumer() {
-		EventChannelImpl ecTmp = null;
 		PushSupplier sTmp = null;
 
 		synchronized (this) {
