@@ -27,9 +27,16 @@ public class ProxyPushSupplierImpl extends ProxyPushSupplierPOA {
 				while (connected) {
 					Any data = null;
 					data = queue.take();
-					if (data != null) {
-						System.out.println("A proxy push supplier: sending data!");
-						push_consumer.push(data);
+					PushConsumer tmp = null;
+					synchronized (this) {
+						if (data != null && connected) {
+							System.out
+									.println("A proxy push supplier: sending data!");
+							tmp = push_consumer;
+						}
+						if (tmp != null) {
+							tmp.push(data);
+						}
 					}
 				}
 			} catch (InterruptedException e) {
