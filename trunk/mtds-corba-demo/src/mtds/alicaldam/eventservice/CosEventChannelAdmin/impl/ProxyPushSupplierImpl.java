@@ -24,7 +24,7 @@ public class ProxyPushSupplierImpl extends ProxyPushSupplierPOA {
 		@Override
 		public void run() {
 			try {
-				while (connected) {
+				while (true) {
 					Any data = null;
 					data = queue.take();
 					PushConsumer tmp = null;
@@ -43,6 +43,8 @@ public class ProxyPushSupplierImpl extends ProxyPushSupplierPOA {
 
 			} catch (Disconnected e) {
 
+			}finally{
+				System.out.println("Closing pusher thread...");
 			}
 
 		}

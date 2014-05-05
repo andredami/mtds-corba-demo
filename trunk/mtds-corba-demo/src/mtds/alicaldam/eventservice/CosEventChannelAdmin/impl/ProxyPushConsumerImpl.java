@@ -45,8 +45,7 @@ public class ProxyPushConsumerImpl extends ProxyPushConsumerPOA {
 		try {
 			eventChannelTmp.supplyEvent(data);
 		} catch (InterruptedException e1) {
-			disconnect_push_consumer();
-			throw new Disconnected();
+			e1.printStackTrace();
 		}
 	}
 
@@ -60,6 +59,8 @@ public class ProxyPushConsumerImpl extends ProxyPushConsumerPOA {
 				eventChannel.remove(this);// TODO think about moving it in tmp
 				sTmp = supplier;
 				supplier = null;
+			}else{
+				return;
 			}
 		}
 		if (sTmp != null) {
