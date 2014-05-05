@@ -11,6 +11,7 @@ import mtds.alicaldam.eventservice.CosEventChannelAdmin.ProxyPushSupplierPOA;
 import mtds.alicaldam.eventservice.CosEventChannelAdmin.TypeError;
 import mtds.alicaldam.eventservice.CosEventComm.Disconnected;
 import mtds.alicaldam.eventservice.CosEventComm.PushConsumer;
+import mtds.alicaldam.eventservice.CosEventComm.PushSupplier;
 
 public class ProxyPushSupplierImpl extends ProxyPushSupplierPOA {
 	private boolean connected = false;
@@ -18,26 +19,26 @@ public class ProxyPushSupplierImpl extends ProxyPushSupplierPOA {
 	private PushConsumer push_consumer;
 	private LinkedBlockingQueue<Any> queue = new LinkedBlockingQueue<Any>();
 	private Thread pusherThread;
-	private Runnable pusherRunnable= new Runnable() {
-		
+	private Runnable pusherRunnable = new Runnable() {
+
 		@Override
 		public void run() {
-			while(connected){
-				Any data;
-				try {
-					data = queue.poll(1, TimeUnit.SECONDS);
-					if(data!=null){
+			try {
+				while (connected) {
+					Any data = null;
+					data = queue.take();
+					if (data != null) {
 						System.out.println("A proxy push supplier: sending data!");
 						push_consumer.push(data);
 					}
-				} catch (InterruptedException  e) {
-				
-				} catch (Disconnected e) {
-					connected=false;
-					push_consumer=null;
 				}
+			} catch (InterruptedException e) {
+
+			} catch (Disconnected e) {
+				connected = false;
+				push_consumer = null;
 			}
-			
+
 		}
 	};
 
@@ -48,38 +49,42 @@ public class ProxyPushSupplierImpl extends ProxyPushSupplierPOA {
 	@Override
 	public void connect_push_consumer(PushConsumer push_consumer)
 			throws AlreadyConnected, TypeError {
-		
-		if (this.push_consumer != null) {
-			throw new AlreadyConnected();
+		synchronized (this) {
+			if (connected) {
+				throw new AlreadyConnected();
+			} else {
+				eventChannel.add(this);
+				this.push_consumer = push_consumer;
+				connected = true;
+				pusherThread = new Thread(pusherRunnable);
+			}
 		}
-		
-		if(push_consumer!=null){
-			connected=true;
-			eventChannel.add(this);
-			this.push_consumer = push_consumer;
-			pusherThread=new Thread(pusherRunnable);
-			pusherThread.start();
-		}else{
-			throw new BAD_PARAM("arg push_consumer is null");
-		}
+
+		pusherThread.start();
 	}
 
 	@Override
 	public void disconnect_push_supplier() {
-		if (!connected) {
-			return;
+		PushConsumer stmp = null;
+		synchronized (this) {
+			if (!connected) {
+				return;
+			} else {
+				connected = false;
+				eventChannel.remove(this);
+				stmp = push_consumer;
+				push_consumer = null;
+				pusherThread.interrupt();
+			}
 		}
-		connected=false;
-		eventChannel.remove(this);
-		if (push_consumer!=null){
-			push_consumer.disconnect_push_consumer();
-			push_consumer=null;
+		if (stmp != null) {
+			stmp.disconnect_push_consumer();
 		}
-		pusherThread.interrupt();
+
 	}
 
 	public void put(Any data) {
-		if (!connected){
+		if (!connected) {
 			return;
 		}
 		System.out.println("A proxy push supplier: new data in the queue!");
