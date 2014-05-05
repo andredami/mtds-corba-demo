@@ -32,6 +32,9 @@ public class PullSupplierImpl extends PullSupplierPOA {
 
 	@Override
 	public Any try_pull(BooleanHolder has_event) throws Disconnected {
+		if(!connected){
+			throw new Disconnected();
+		}
 		Any data=queue.poll();
 		if(data==null){
 			has_event.value=false;
@@ -44,12 +47,19 @@ public class PullSupplierImpl extends PullSupplierPOA {
 
 	@Override
 	public void disconnect_pull_supplier() {
-		connected=false;
-		if (pull_consumer!=null){
-			pull_consumer.disconnect_pull_consumer();
-			pull_consumer=null;
+		PullConsumer stmp = null;
+		synchronized (this) {
+			if (!connected) {
+				return;
+			} else {
+				connected = false;
+				stmp = pull_consumer;
+				pull_consumer = null;
+			}
 		}
-
+		if (stmp != null) {
+			stmp.disconnect_pull_consumer();
+		}
 	}
 	
 	public void setPullConsumer(PullConsumer consumer){

@@ -35,8 +35,7 @@ public class ProxyPushSupplierImpl extends ProxyPushSupplierPOA {
 			} catch (InterruptedException e) {
 
 			} catch (Disconnected e) {
-				connected = false;
-				push_consumer = null;
+
 			}
 
 		}

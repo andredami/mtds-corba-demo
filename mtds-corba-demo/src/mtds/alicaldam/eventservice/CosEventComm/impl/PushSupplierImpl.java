@@ -9,30 +9,40 @@ import mtds.alicaldam.eventservice.CosEventComm.PushSupplierPOA;
 public class PushSupplierImpl extends PushSupplierPOA {
 	
 	private PushConsumer push_consumer;
-	private boolean connected=true;
+	private boolean connected=false;
 	
 	@Override
 	public void disconnect_push_supplier() {
-		connected=false;
-		if(push_consumer!=null){
-			push_consumer.disconnect_push_consumer();
-			push_consumer=null;
+		PushConsumer stmp = null;
+		synchronized (this) {
+			if (!connected) {
+				return;
+			} else {
+				connected = false;
+				stmp = push_consumer;
+				push_consumer = null;
+			}
+		}
+		if (stmp != null) {
+			stmp.disconnect_push_consumer();
 		}
 
 	}
 	
 	public void send(Any data) throws Disconnected{
-		if(connected&&push_consumer!=null){
-			try{
-				push_consumer.push(data);
-			}catch(Disconnected e){
-				connected=false;
-				push_consumer=null;
+		PushConsumer ctmp=null;
+		synchronized (this) {
+			if(connected){
+				ctmp=push_consumer;
+			}else{
+				return;
 			}
 		}
+		ctmp.push(data);
 	}
 	
 	public void setPushConsumer(PushConsumer push_consumer){
+		connected=true;
 		this.push_consumer=push_consumer;
 	}
 	
