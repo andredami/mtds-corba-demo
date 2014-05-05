@@ -40,6 +40,7 @@ public class PullConsumerClient {
 			ProxyPullSupplier proxy_pull_supplier=consumerAdmin.obtain_pull_supplier();
 			pull_consumer_impl.setPullSupplier(proxy_pull_supplier);
 			proxy_pull_supplier.connect_pull_consumer(pull_consumer_impl._this());
+			pull_consumer_impl.init();
 			
 			//TODO: receive and print data 
 			Runnable r=new Runnable(){
