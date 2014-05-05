@@ -6,6 +6,7 @@ import mtds.alicaldam.eventservice.CosEventChannelAdmin.ConsumerAdmin;
 import mtds.alicaldam.eventservice.CosEventChannelAdmin.EventChannel;
 import mtds.alicaldam.eventservice.CosEventChannelAdmin.EventChannelHelper;
 import mtds.alicaldam.eventservice.CosEventChannelAdmin.ProxyPushSupplier;
+import mtds.alicaldam.eventservice.CosEventComm.Disconnected;
 import mtds.alicaldam.eventservice.CosEventComm.impl.PushConsumerImpl;
 
 import org.omg.CORBA.Any;
@@ -49,6 +50,8 @@ public class PushConsumerClient {
 					while(true){
 						Event data=readDataFromSupplier(push_consumer_impl);
 					}
+					}catch(Disconnected e1){
+						System.out.println("disconnected closing read thread");
 					}catch(Exception e){
 						e.printStackTrace();
 					}			
@@ -72,7 +75,7 @@ public class PushConsumerClient {
 	}
 
 	private static Event readDataFromSupplier(final PushConsumerImpl push_consumer_impl)
-			throws InterruptedException {
+			throws InterruptedException, Disconnected {
 		System.out.println("Waiting for new data...");
 		Any data = push_consumer_impl.read();
 		if (data == null) {

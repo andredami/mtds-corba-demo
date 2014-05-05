@@ -38,11 +38,16 @@ public class PushConsumerImpl extends PushConsumerPOA {
 		}
 	}
 
-	public synchronized Any read() throws InterruptedException {
+	public synchronized Any read() throws InterruptedException,Disconnected {
 		while (queue.isEmpty() && connected) {
 			wait();
 		}
-		return queue.poll();
+		Any data= queue.poll();
+		if(data==null){
+			throw new Disconnected();
+		}else{
+			return data;
+		}
 	}
 
 	public boolean isConnected() {
@@ -50,6 +55,7 @@ public class PushConsumerImpl extends PushConsumerPOA {
 	}
 
 	public void setPushSupplier(PushSupplier push_supplier) {
+		connected=true;
 		this.push_supplier = push_supplier;
 	}
 
