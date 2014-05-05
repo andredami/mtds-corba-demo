@@ -10,6 +10,7 @@ import mtds.alicaldam.eventservice.CosEventChannelAdmin.AlreadyConnected;
 import mtds.alicaldam.eventservice.CosEventChannelAdmin.ProxyPullSupplierPOA;
 import mtds.alicaldam.eventservice.CosEventComm.Disconnected;
 import mtds.alicaldam.eventservice.CosEventComm.PullConsumer;
+import mtds.alicaldam.eventservice.CosEventComm.PushConsumer;
 
 public class ProxyPullSupplierImpl extends ProxyPullSupplierPOA {
 
@@ -17,9 +18,9 @@ public class ProxyPullSupplierImpl extends ProxyPullSupplierPOA {
 	private PullConsumer consumer = null;
 	private LinkedList<Any> queue = new LinkedList<>();
 	private EventChannelImpl eventChannel;
-	
+
 	public ProxyPullSupplierImpl(EventChannelImpl ec) {
-		this.eventChannel=ec;
+		this.eventChannel = ec;
 	}
 
 	@Override
@@ -35,6 +36,26 @@ public class ProxyPullSupplierImpl extends ProxyPullSupplierPOA {
 			}
 		}
 
+	}
+
+	
+
+	@Override
+	public void disconnect_pull_supplier() {
+		PullConsumer stmp = null;
+		synchronized (this) {
+			if (!connected) {
+				return;
+			} else {
+				connected = false;
+				eventChannel.remove(this);
+				stmp = consumer;
+				consumer = null;
+			}
+		}
+		if (stmp != null) {
+			stmp.disconnect_pull_consumer();
+		}
 	}
 
 	@Override
@@ -69,23 +90,16 @@ public class ProxyPullSupplierImpl extends ProxyPullSupplierPOA {
 				has_event.value = true;
 			} else {
 				has_event.value = false;
-				elem=_orb().create_any();
+				elem = _orb().create_any();
 			}
 		}
 		return elem;
 	}
-
-	@Override
-	public void disconnect_pull_supplier() {
-		if (connected) {
-			connected = false;
-			consumer.disconnect_pull_consumer();
-			consumer = null;
-		}
-	}
-
+	
 	public void put(Any a) {
-		if (!connected){return;}
+		if (!connected) {
+			return;
+		}
 		synchronized (queue) {
 			queue.addLast(a);
 		}
