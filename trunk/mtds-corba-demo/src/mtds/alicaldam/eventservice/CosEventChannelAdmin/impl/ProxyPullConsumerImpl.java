@@ -8,11 +8,12 @@ import mtds.alicaldam.eventservice.CosEventChannelAdmin.ProxyPullConsumerPOA;
 import mtds.alicaldam.eventservice.CosEventChannelAdmin.TypeError;
 import mtds.alicaldam.eventservice.CosEventComm.Disconnected;
 import mtds.alicaldam.eventservice.CosEventComm.PullSupplier;
+import mtds.alicaldam.eventservice.CosEventComm.PushSupplier;
 
 public class ProxyPullConsumerImpl extends ProxyPullConsumerPOA {
 	private static final int POLLING_INTERVAL_MILLIS = 1000;
 	EventChannelImpl eventChannel;
-	private boolean disconnected = true;
+	private boolean connected = false;
 	private PullSupplier supplier=null;
 	
 	public ProxyPullConsumerImpl(EventChannelImpl eventChannel) {
@@ -21,25 +22,29 @@ public class ProxyPullConsumerImpl extends ProxyPullConsumerPOA {
 
 	@Override
 	public void connect_pull_supplier(PullSupplier pull_supplier)
-			throws AlreadyConnected, TypeError {
-		if(supplier!=null){
-			throw new AlreadyConnected();
+			throws AlreadyConnected, TypeError {		
+		synchronized (this) {
+			if (connected) {
+				throw new AlreadyConnected();
+			} else {
+				eventChannel.add(this);
+				this.supplier = pull_supplier;
+				connected = true;
+				pullerThread = new Thread(pullRunnable);
+			}
 		}
-		eventChannel.add(this);
-		supplier=pull_supplier;
-		disconnected=false;
-		t=new Thread(pullThread);
-		t.start();
+
+		pullerThread.start();
 		
 	}
 	
-	private Thread t;
-	private Runnable pullThread = new Runnable() {
+	private Thread pullerThread;
+	private Runnable pullRunnable = new Runnable() {
 		
 		@Override
 		public void run() {
 			BooleanHolder has_event=new BooleanHolder(false);
-			while(!disconnected){
+			while(connected){
 				try {
 					Any event=supplier.try_pull(has_event);
 					if(has_event.value==true){
@@ -48,7 +53,7 @@ public class ProxyPullConsumerImpl extends ProxyPullConsumerPOA {
 						Thread.sleep(POLLING_INTERVAL_MILLIS);
 					}
 				} catch (Disconnected | InterruptedException e) {
-					disconnect_pull_consumer();
+					
 				}
 				
 			}
@@ -58,17 +63,21 @@ public class ProxyPullConsumerImpl extends ProxyPullConsumerPOA {
 
 	@Override
 	public void disconnect_pull_consumer() {
-		if(disconnected){
-			return;
+		PullSupplier sTmp = null;
+
+		synchronized (this) {
+			if(connected){
+				connected = false;
+				eventChannel.remove(this);// TODO think about moving it in tmp
+				sTmp = supplier;
+				supplier = null;
+				pullerThread.interrupt();
+			}
 		}
-		
-		disconnected=true;
-		eventChannel.remove(this);
-		
-		if(supplier!=null){
-			supplier.disconnect_pull_supplier();
-			supplier=null;
+		if (sTmp != null) {
+			sTmp.disconnect_pull_supplier();
 		}
+
 	}
 
 }
