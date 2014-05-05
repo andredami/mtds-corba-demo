@@ -14,15 +14,15 @@ public class ProxyPullConsumerImpl extends ProxyPullConsumerPOA {
 	private static final int POLLING_INTERVAL_MILLIS = 1000;
 	EventChannelImpl eventChannel;
 	private boolean connected = false;
-	private PullSupplier supplier=null;
-	
+	private PullSupplier supplier = null;
+
 	public ProxyPullConsumerImpl(EventChannelImpl eventChannel) {
-		this.eventChannel=eventChannel;
+		this.eventChannel = eventChannel;
 	}
 
 	@Override
 	public void connect_pull_supplier(PullSupplier pull_supplier)
-			throws AlreadyConnected, TypeError {		
+			throws AlreadyConnected, TypeError {
 		synchronized (this) {
 			if (connected) {
 				throw new AlreadyConnected();
@@ -35,29 +35,35 @@ public class ProxyPullConsumerImpl extends ProxyPullConsumerPOA {
 		}
 
 		pullerThread.start();
-		
+
 	}
-	
+
 	private Thread pullerThread;
 	private Runnable pullRunnable = new Runnable() {
-		
+
 		@Override
 		public void run() {
-			BooleanHolder has_event=new BooleanHolder(false);
-			while(connected){
-				try {
-					Any event=supplier.try_pull(has_event);
-					if(has_event.value==true){
-						eventChannel.supplyEvent(event);
-					}else{
-						Thread.sleep(POLLING_INTERVAL_MILLIS);
+			try {
+				while (connected) {
+					PullSupplier stmp = null;
+					synchronized (this) {
+						if (connected)
+							stmp = supplier;
 					}
-				} catch (Disconnected | InterruptedException e) {
-					
+
+					if (stmp != null) {
+						BooleanHolder has_event = new BooleanHolder(false);
+						Any event = stmp.try_pull(has_event);
+						if (has_event.value == true) {
+							eventChannel.supplyEvent(event);
+						} else {
+							Thread.sleep(POLLING_INTERVAL_MILLIS);
+						}
+					}
 				}
-				
+			} catch (Disconnected | InterruptedException e) {
+
 			}
-			
 		}
 	};
 
@@ -66,12 +72,14 @@ public class ProxyPullConsumerImpl extends ProxyPullConsumerPOA {
 		PullSupplier sTmp = null;
 
 		synchronized (this) {
-			if(connected){
+			if (connected) {
 				connected = false;
 				eventChannel.remove(this);// TODO think about moving it in tmp
 				sTmp = supplier;
 				supplier = null;
 				pullerThread.interrupt();
+			}else{
+				return;
 			}
 		}
 		if (sTmp != null) {
