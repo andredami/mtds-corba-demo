@@ -57,6 +57,9 @@ public class ProxyPushSupplierImpl extends ProxyPushSupplierPOA {
 	@Override
 	public void connect_push_consumer(PushConsumer push_consumer)
 			throws AlreadyConnected, TypeError {
+		if(push_consumer == null){
+			throw new BAD_PARAM();
+		}
 		synchronized (this) {
 			if (connected) {
 				throw new AlreadyConnected();

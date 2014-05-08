@@ -1,6 +1,7 @@
 package mtds.alicaldam.eventservice.CosEventChannelAdmin.impl;
 
 import org.omg.CORBA.Any;
+import org.omg.CORBA.BAD_PARAM;
 import org.omg.CORBA.BooleanHolder;
 import org.omg.CORBA.COMM_FAILURE;
 
@@ -24,6 +25,9 @@ public class ProxyPullConsumerImpl extends ProxyPullConsumerPOA {
 	@Override
 	public void connect_pull_supplier(PullSupplier pull_supplier)
 			throws AlreadyConnected, TypeError {
+		if(pull_supplier==null){
+			throw new BAD_PARAM();
+		}
 		synchronized (this) {
 			if (connected) {
 				throw new AlreadyConnected();
