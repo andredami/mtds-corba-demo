@@ -56,6 +56,9 @@ public class ProxyPullSupplierImpl extends ProxyPullSupplierPOA {
 		if (stmp != null) {
 			stmp.disconnect_pull_consumer();
 		}
+		synchronized (queue) {
+			queue.notifyAll();
+		}
 	}
 
 	@Override
@@ -65,7 +68,7 @@ public class ProxyPullSupplierImpl extends ProxyPullSupplierPOA {
 		}
 		Any elem;
 		synchronized (queue) {
-			while (!queue.isEmpty()) {
+			while (queue.isEmpty()&&connected) {
 				try {
 					queue.wait();
 				} catch (InterruptedException e) {
@@ -73,6 +76,9 @@ public class ProxyPullSupplierImpl extends ProxyPullSupplierPOA {
 				}
 			}
 			elem = queue.poll();
+		}
+		if(elem==null){
+			throw new Disconnected();
 		}
 		return elem;
 
@@ -102,6 +108,7 @@ public class ProxyPullSupplierImpl extends ProxyPullSupplierPOA {
 		}
 		synchronized (queue) {
 			queue.addLast(a);
+			queue.notifyAll();
 		}
 	}
 }
