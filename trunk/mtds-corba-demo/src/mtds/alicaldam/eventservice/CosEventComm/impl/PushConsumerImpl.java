@@ -18,8 +18,10 @@ public class PushConsumerImpl extends PushConsumerPOA {
 		if (!connected) {
 			throw new Disconnected();
 		}
-		queue.add(data);
-		notifyAll();
+		synchronized (queue) {
+			queue.add(data);
+			queue.notifyAll();	
+		}
 	}
 
 	@Override
@@ -36,16 +38,22 @@ public class PushConsumerImpl extends PushConsumerPOA {
 		if (sTmp != null) {
 			sTmp.disconnect_push_supplier();
 		}
+		synchronized (queue) {
+			queue.notifyAll();
+		}
+		
 	}
 
-	public synchronized Any read() throws InterruptedException,Disconnected {
-		while (queue.isEmpty() && connected) {
-			wait();
+	public Any read() throws InterruptedException, Disconnected {
+		synchronized (queue) {
+			while (queue.isEmpty() && connected) {
+				queue.wait();
+			}
 		}
-		Any data= queue.poll();
-		if(data==null){
+		Any data = queue.poll();
+		if (data == null) {
 			throw new Disconnected();
-		}else{
+		} else {
 			return data;
 		}
 	}
@@ -55,7 +63,7 @@ public class PushConsumerImpl extends PushConsumerPOA {
 	}
 
 	public void setPushSupplier(PushSupplier push_supplier) {
-		connected=true;
+		connected = true;
 		this.push_supplier = push_supplier;
 	}
 

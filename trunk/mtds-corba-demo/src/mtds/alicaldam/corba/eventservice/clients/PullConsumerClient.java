@@ -6,6 +6,7 @@ import mtds.alicaldam.eventservice.CosEventChannelAdmin.ConsumerAdmin;
 import mtds.alicaldam.eventservice.CosEventChannelAdmin.EventChannel;
 import mtds.alicaldam.eventservice.CosEventChannelAdmin.EventChannelHelper;
 import mtds.alicaldam.eventservice.CosEventChannelAdmin.ProxyPullSupplier;
+import mtds.alicaldam.eventservice.CosEventComm.Disconnected;
 import mtds.alicaldam.eventservice.CosEventComm.impl.PullConsumerImpl;
 
 import org.omg.CORBA.Any;
@@ -42,7 +43,7 @@ public class PullConsumerClient {
 			proxy_pull_supplier.connect_pull_consumer(pull_consumer_impl._this());
 			pull_consumer_impl.init();
 			
-			//TODO: receive and print data 
+			// receive and print data 
 			Runnable r=new Runnable(){
 				public void run(){
 					
@@ -51,8 +52,8 @@ public class PullConsumerClient {
 						Event data=readDataFromSupplier(pull_consumer_impl);
 					}
 					}catch(Exception e){
-						e.printStackTrace();
-					}			
+						System.out.println("Disconnected");
+					}
 				}
 			};
 			
@@ -62,7 +63,7 @@ public class PullConsumerClient {
 			Scanner scanner= new Scanner(System.in);
 			while(!scanner.nextLine().equalsIgnoreCase("q")){
 			}
-			System.out.println("Disconnecting supplier...");
+			System.out.println("Disconnecting consumer...");
 			pull_consumer_impl.disconnect_pull_consumer();
 			scanner.close();
 			System.out.println("EXIT OK");	
@@ -73,7 +74,7 @@ public class PullConsumerClient {
 	}
 
 	private static Event readDataFromSupplier(final PullConsumerImpl push_consumer_impl)
-			throws InterruptedException {
+			throws InterruptedException, Disconnected {
 		System.out.println("Waiting for new data...");
 		Any data = push_consumer_impl.read();
 		if (data == null) {

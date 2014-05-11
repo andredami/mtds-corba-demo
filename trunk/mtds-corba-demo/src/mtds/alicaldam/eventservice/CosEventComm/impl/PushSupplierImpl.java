@@ -44,6 +44,7 @@ public class PushSupplierImpl extends PushSupplierPOA {
 	public void setPushConsumer(PushConsumer push_consumer){
 		connected=true;
 		this.push_consumer=push_consumer;
+		
 	}
 	
 
