@@ -80,7 +80,7 @@ public class ProxyPullConsumerImpl extends ProxyPullConsumerPOA {
 		synchronized (this) {
 			if (connected) {
 				connected = false;
-				eventChannel.remove(this);// TODO think about moving it in tmp
+				eventChannel.remove(this);
 				sTmp = supplier;
 				supplier = null;
 				pullerThread.interrupt();

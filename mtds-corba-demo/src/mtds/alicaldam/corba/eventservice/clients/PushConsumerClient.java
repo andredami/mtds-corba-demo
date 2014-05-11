@@ -51,7 +51,7 @@ public class PushConsumerClient {
 						Event data=readDataFromSupplier(push_consumer_impl);
 					}
 					}catch(Disconnected e1){
-						System.out.println("disconnected closing read thread");
+						System.out.println("disconnected");
 					}catch(Exception e){
 						e.printStackTrace();
 					}			

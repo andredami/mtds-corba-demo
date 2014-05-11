@@ -1,5 +1,6 @@
 package mtds.alicaldam.eventservice.CosEventComm.impl;
 
+import java.util.LinkedList;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import org.omg.CORBA.Any;
@@ -11,7 +12,7 @@ import mtds.alicaldam.eventservice.CosEventComm.PullSupplier;
 
 public class PullConsumerImpl extends PullConsumerPOA {
 	private static final int POLLING_INTERVAL_MILLIS = 1000;
-	private LinkedBlockingQueue<Any> queue=new LinkedBlockingQueue<Any>(); 
+	private LinkedList<Any> queue=new LinkedList<Any>(); 
 	boolean connected = true;
 	private PullSupplier supplier;
 	private Thread t;
@@ -31,7 +32,11 @@ public class PullConsumerImpl extends PullConsumerPOA {
 						BooleanHolder has_event = new BooleanHolder(false);
 						Any event = stmp.try_pull(has_event);
 						if (has_event.value == true) {
-							queue.add(event);
+							synchronized (queue) {
+								queue.add(event);
+								queue.notifyAll();
+							}
+							
 						} else {
 							Thread.sleep(POLLING_INTERVAL_MILLIS);
 						}
@@ -64,7 +69,9 @@ public class PullConsumerImpl extends PullConsumerPOA {
 		if (sTmp != null) {
 			sTmp.disconnect_pull_supplier();
 		}
-
+		synchronized (queue) {
+			queue.notifyAll();
+		}
 	}
 
 	public void setPullSupplier(PullSupplier supplier) {
@@ -77,12 +84,17 @@ public class PullConsumerImpl extends PullConsumerPOA {
 		
 	}
 
-	public Any read() {
-		try {
-			return queue.take();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-			return null;
+	public Any read() throws InterruptedException,Disconnected {
+		synchronized(queue){
+			while (queue.isEmpty() && connected) {
+				queue.wait();
+			}
+		}
+		Any data= queue.poll();
+		if(data==null){
+			throw new Disconnected();
+		}else{
+			return data;
 		}
 	}
 }

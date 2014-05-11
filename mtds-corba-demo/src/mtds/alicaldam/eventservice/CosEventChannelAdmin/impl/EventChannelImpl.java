@@ -6,11 +6,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import org.omg.CORBA.Any;
-import org.omg.CORBA.ORB;
-import org.omg.CORBA.ORBPackage.InvalidName;
-import org.omg.PortableServer.POA;
-import org.omg.PortableServer.POAHelper;
-import org.omg.PortableServer.POAManagerPackage.AdapterInactive;
 import org.omg.PortableServer.POAPackage.ServantNotActive;
 import org.omg.PortableServer.POAPackage.WrongPolicy;
 
@@ -19,7 +14,6 @@ import mtds.alicaldam.eventservice.CosEventChannelAdmin.ConsumerAdminHelper;
 import mtds.alicaldam.eventservice.CosEventChannelAdmin.EventChannelPOA;
 import mtds.alicaldam.eventservice.CosEventChannelAdmin.SupplierAdmin;
 import mtds.alicaldam.eventservice.CosEventChannelAdmin.SupplierAdminHelper;
-import mtds.alicaldam.eventservice.CosEventComm.impl.PushSupplierImpl;
 
 public class EventChannelImpl extends EventChannelPOA {
 	
@@ -64,11 +58,9 @@ public class EventChannelImpl extends EventChannelPOA {
 						ppushi.put(data);
 					}
 				} catch (InterruptedException e) {
-					// TODO
+					
 				}
-
 			}
-
 		}
 	};
 	private Thread t;
@@ -104,10 +96,48 @@ public class EventChannelImpl extends EventChannelPOA {
 	public void destroy() {
 		destroyed = true;
 		t.interrupt();
+		System.out.println("...DESTROY...");
+		ArrayList<ProxyPullSupplierImpl> pull_suppliers_tmp;
+		synchronized (pull_suppliers) {
+			pull_suppliers_tmp = (ArrayList<ProxyPullSupplierImpl>) pull_suppliers
+					.clone();
+		}
+		for (ProxyPullSupplierImpl ppulli : pull_suppliers_tmp = new ArrayList<ProxyPullSupplierImpl>(
+				pull_suppliers_tmp)) {
+			ppulli.disconnect_pull_supplier();
+		}
+		
+		ArrayList<ProxyPushSupplierImpl> push_suppliers_tmp;
+		synchronized (push_suppliers) {
+			push_suppliers_tmp = (ArrayList<ProxyPushSupplierImpl>) push_suppliers.clone();
+		}
+		for (ProxyPushSupplierImpl ppushi : push_suppliers_tmp) {
+			ppushi.disconnect_push_supplier();
+		}
+		
+		ArrayList<ProxyPushConsumerImpl> push_consumers_tmp ;
+		synchronized (push_suppliers) {
+			push_consumers_tmp = (ArrayList<ProxyPushConsumerImpl>) push_consumers.clone();
+		}
+		for (ProxyPushConsumerImpl proxypushc : push_consumers_tmp) {
+			proxypushc.disconnect_push_consumer();
+		}
+		
+		ArrayList<ProxyPullConsumerImpl> pull_consumers_tmp ;
+		synchronized (push_suppliers) {
+			pull_consumers_tmp = (ArrayList<ProxyPullConsumerImpl>) pull_consumers.clone();
+		}
+		for (ProxyPullConsumerImpl proxypullc : pull_consumers_tmp) {
+			proxypullc.disconnect_pull_consumer();
+		}
+
+		
 	}
 
 	public void supplyEvent(Any data) throws InterruptedException {
-		
+		if (destroyed){
+			return;
+		}
 		eventsQueue.put(data);
 		System.out.println("EventChannel: eventsQueue.put(data)");
 
@@ -117,13 +147,14 @@ public class EventChannelImpl extends EventChannelPOA {
 		synchronized (pull_consumers) {
 			pull_consumers.remove(proxyPullConsumerImpl);
 		}
-
+		System.out.println("removed proxy pull consumer");
 	}
 
 	public void remove(ProxyPushConsumerImpl proxyPushConsumerImpl) {
 		synchronized (push_consumers) {
 			push_consumers.remove(proxyPushConsumerImpl);
 		}
+		System.out.println("removed proxy push consumer");
 
 	}
 
@@ -131,6 +162,7 @@ public class EventChannelImpl extends EventChannelPOA {
 		synchronized (push_suppliers) {
 			push_suppliers.remove(proxyPushSupplierImpl);
 		}
+		System.out.println("removed proxy push supplier");
 
 	}
 
@@ -138,6 +170,7 @@ public class EventChannelImpl extends EventChannelPOA {
 		synchronized (pull_suppliers) {
 			pull_suppliers.remove(proxyPullSupplierImpl);
 		}
+		System.out.println("Removed proxy pull supplier");
 	}
 
 	public void add(ProxyPushSupplierImpl proxyPushSupplierImpl) {
