@@ -35,7 +35,7 @@ public class PushSupplierImpl extends PushSupplierPOA {
 			if(connected){
 				ctmp=push_consumer;
 			}else{
-				return;
+				throw new Disconnected();
 			}
 		}
 		ctmp.push(data);

@@ -45,8 +45,7 @@ public class EventChannelImpl extends EventChannelPOA {
 						pull_suppliers_tmp = (ArrayList<ProxyPullSupplierImpl>) pull_suppliers
 								.clone();
 					}
-					for (ProxyPullSupplierImpl ppulli : pull_suppliers_tmp = new ArrayList<ProxyPullSupplierImpl>(
-							pull_suppliers_tmp)) {
+					for (ProxyPullSupplierImpl ppulli : pull_suppliers_tmp) {
 						ppulli.put(data);
 					}
 					
@@ -102,8 +101,7 @@ public class EventChannelImpl extends EventChannelPOA {
 			pull_suppliers_tmp = (ArrayList<ProxyPullSupplierImpl>) pull_suppliers
 					.clone();
 		}
-		for (ProxyPullSupplierImpl ppulli : pull_suppliers_tmp = new ArrayList<ProxyPullSupplierImpl>(
-				pull_suppliers_tmp)) {
+		for (ProxyPullSupplierImpl ppulli : pull_suppliers_tmp) {
 			ppulli.disconnect_pull_supplier();
 		}
 		
@@ -116,7 +114,7 @@ public class EventChannelImpl extends EventChannelPOA {
 		}
 		
 		ArrayList<ProxyPushConsumerImpl> push_consumers_tmp ;
-		synchronized (push_suppliers) {
+		synchronized (push_consumers) {
 			push_consumers_tmp = (ArrayList<ProxyPushConsumerImpl>) push_consumers.clone();
 		}
 		for (ProxyPushConsumerImpl proxypushc : push_consumers_tmp) {
@@ -124,7 +122,7 @@ public class EventChannelImpl extends EventChannelPOA {
 		}
 		
 		ArrayList<ProxyPullConsumerImpl> pull_consumers_tmp ;
-		synchronized (push_suppliers) {
+		synchronized (pull_consumers) {
 			pull_consumers_tmp = (ArrayList<ProxyPullConsumerImpl>) pull_consumers.clone();
 		}
 		for (ProxyPullConsumerImpl proxypullc : pull_consumers_tmp) {
