@@ -74,6 +74,9 @@ public class PullSupplierImpl extends PullSupplierPOA {
 		if (stmp != null) {
 			stmp.disconnect_pull_consumer();
 		}
+		synchronized (queue) {
+			queue.notifyAll();
+		}
 		System.out.println("PullSupplierImpl: disconnected");
 	}
 

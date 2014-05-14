@@ -27,7 +27,7 @@ public class PullConsumerClient {
 			ORB orb = ORB.init(args,null);
 
 			//create the remote pull consumer
-			final PullConsumerImpl pull_consumer_impl=new PullConsumerImpl();
+			final PullConsumerImpl pull_consumer_impl=new PullConsumerImpl(PullConsumerImpl.IS_PULL);
 			POA rootpoa = POAHelper.narrow(orb.resolve_initial_references("RootPOA"));
 			rootpoa.the_POAManager().activate();
 			org.omg.CORBA.Object ref = rootpoa.servant_to_reference(pull_consumer_impl);

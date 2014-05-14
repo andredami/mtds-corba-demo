@@ -16,6 +16,9 @@ public class PullConsumerImpl extends PullConsumerPOA {
 	boolean connected = true;
 	private PullSupplier supplier;
 	private Thread t;
+	private int mode;
+	public static final int IS_TRY_PULL=1;
+	public static final int IS_PULL=0;
 	private Runnable pullThread = new Runnable() {
 
 		@Override
@@ -29,16 +32,10 @@ public class PullConsumerImpl extends PullConsumerPOA {
 					}
 
 					if (stmp != null) {
-						BooleanHolder has_event = new BooleanHolder(false);
-						Any event = stmp.try_pull(has_event);
-						if (has_event.value == true) {
-							synchronized (queue) {
-								queue.add(event);
-								queue.notifyAll();
-							}
-							
-						} else {
-							Thread.sleep(POLLING_INTERVAL_MILLIS);
+						if (mode==IS_TRY_PULL){
+							retrieveDataWithTryPull(stmp);
+						}else{
+							retrieveDataWithPull(stmp);
 						}
 					}
 				}
@@ -49,7 +46,33 @@ public class PullConsumerImpl extends PullConsumerPOA {
 	};
 
 	public PullConsumerImpl() {
-		
+		this.mode=IS_TRY_PULL;
+	}
+	
+	public PullConsumerImpl(int mode){
+		this.mode=mode;
+	}
+	
+	private void retrieveDataWithTryPull(PullSupplier ps) throws Disconnected, InterruptedException{
+		BooleanHolder has_event = new BooleanHolder(false);
+		Any event = ps.try_pull(has_event);
+		if (has_event.value == true) {
+			synchronized (queue) {
+				queue.add(event);
+				queue.notifyAll();
+			}
+		}else{
+			Thread.sleep(POLLING_INTERVAL_MILLIS);
+		}
+
+	}
+	
+	private void retrieveDataWithPull(PullSupplier ps) throws Disconnected{
+		Any event=ps.pull();
+		synchronized (queue) {
+			queue.add(event);
+			queue.notifyAll();
+		}
 	}
 
 	@Override
