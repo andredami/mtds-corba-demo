@@ -58,13 +58,8 @@ public class ProxyPullConsumerImpl extends ProxyPullConsumerPOA {
 					}
 
 					if (stmp != null) {
-						BooleanHolder has_event = new BooleanHolder(false);
-						Any event = stmp.try_pull(has_event);
-						if (has_event.value == true) {
-							eventChannel.supplyEvent(event);
-						} else {
-							Thread.sleep(POLLING_INTERVAL_MILLIS);
-						}
+						retrieveDataWithPull(stmp);
+					//	retrieveDataWithTryPull(stmp);
 					}
 				}
 			} catch (Disconnected | RuntimeException | InterruptedException e) {
@@ -72,6 +67,29 @@ public class ProxyPullConsumerImpl extends ProxyPullConsumerPOA {
 			}
 		}
 	};
+	
+	private void retrieveDataWithTryPull(PullSupplier ps) throws Disconnected, InterruptedException{
+		BooleanHolder has_event = new BooleanHolder(false);
+		Any event = ps.try_pull(has_event);
+		if (has_event.value == true) {
+			eventChannel.supplyEvent(event);
+		}else{
+			Thread.sleep(POLLING_INTERVAL_MILLIS);
+		}
+
+	}
+	
+	private void retrieveDataWithPull(PullSupplier ps) throws Disconnected, InterruptedException{
+		try{
+			Any event=ps.pull();		
+			eventChannel.supplyEvent(event);
+		}catch(Disconnected e){
+			System.out.println("Proxy pull consumer: exiting supplier.pull() after disconnection");
+			throw e;
+		}
+		
+	}
+
 
 	@Override
 	public void disconnect_pull_consumer() {
