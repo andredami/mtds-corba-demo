@@ -6,6 +6,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import org.omg.CORBA.Any;
+import org.omg.CORBA.OBJECT_NOT_EXIST;
 import org.omg.PortableServer.POAPackage.ServantNotActive;
 import org.omg.PortableServer.POAPackage.WrongPolicy;
 
@@ -78,7 +79,7 @@ public class EventChannelImpl extends EventChannelPOA {
 	@Override
 	public ConsumerAdmin for_consumers() {
 		if (destroyed) {
-			return null;
+			throw new OBJECT_NOT_EXIST();
 		}
 		return consumer_admin;
 	}
@@ -86,7 +87,7 @@ public class EventChannelImpl extends EventChannelPOA {
 	@Override
 	public SupplierAdmin for_suppliers() {
 		if (destroyed) {
-			return null;
+			throw new OBJECT_NOT_EXIST();
 		}
 		return supplier_admin;
 	}
