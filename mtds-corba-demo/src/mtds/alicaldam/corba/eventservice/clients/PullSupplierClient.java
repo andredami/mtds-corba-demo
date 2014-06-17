@@ -7,6 +7,7 @@ import mtds.alicaldam.eventservice.CosEventChannelAdmin.EventChannelHelper;
 import mtds.alicaldam.eventservice.CosEventChannelAdmin.ProxyPullConsumer;
 import mtds.alicaldam.eventservice.CosEventChannelAdmin.SupplierAdmin;
 import mtds.alicaldam.eventservice.CosEventComm.impl.PullSupplierImpl;
+
 import org.omg.CORBA.Any;
 import org.omg.CORBA.ORB;
 import org.omg.PortableServer.POA;
@@ -17,12 +18,15 @@ import Data.EventHelper;
 
 public class PullSupplierClient {
 
-	public static final String ADDRESS = "localhost";
-
 	public static void main(String args[]) {
 
 		try {
-
+			if(args.length==0){
+				System.err.println("No server IP supplied");
+				return;
+			}
+			
+			String ADDRESS=args[0];
 			ORB orb = ORB.init(args, null);
 
 			// create the remote push supplier

@@ -18,12 +18,16 @@ import Data.Event;
 import Data.EventHelper;
 
 public class PushConsumerClient {
-	public static final String ADDRESS = "localhost";
 
 	public static void main(String args[]){
 		
 		try{
-
+			if(args.length==0){
+				System.err.println("No server IP supplied");
+				return;
+			}
+			
+			String ADDRESS=args[0];
 			ORB orb = ORB.init(args,null);
 
 			//create the remote push consumer
