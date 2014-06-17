@@ -43,7 +43,14 @@ public class PushSupplierClient {
 			EventChannel event_channel = EventChannelHelper.narrow(sRef);
 
 			// connect consumer and supplier
-			SupplierAdmin supplierAdmin = event_channel.for_suppliers();
+			SupplierAdmin supplierAdmin;
+			try{
+			supplierAdmin= event_channel.for_suppliers();
+			}catch(Exception e){
+				System.out.println("server not available");
+				return;
+			}
+			
 			ProxyPushConsumer proxy_push_consumer = supplierAdmin
 					.obtain_push_consumer();
 			push_supplier_impl.setPushConsumer(proxy_push_consumer);

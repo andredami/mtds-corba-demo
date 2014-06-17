@@ -41,7 +41,13 @@ public class PullConsumerClient {
 			EventChannel event_channel = EventChannelHelper.narrow(sRef);
 						
 			//connect consumer and supplier
-			ConsumerAdmin consumerAdmin=event_channel.for_consumers();
+			ConsumerAdmin consumerAdmin;
+			try{
+				consumerAdmin=event_channel.for_consumers();
+			}catch(Exception e ){
+				System.out.println("Server not available");
+				return;
+			}
 			ProxyPullSupplier proxy_pull_supplier=consumerAdmin.obtain_pull_supplier();
 			pull_consumer_impl.setPullSupplier(proxy_pull_supplier);
 			proxy_pull_supplier.connect_pull_consumer(pull_consumer_impl._this());
