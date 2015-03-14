@@ -1,0 +1,1 @@
+Implement (using the J2SE version of Corba) a reasonable subset of the CORBA Event Service. Implement also a simple client to show the functionality of the system.
